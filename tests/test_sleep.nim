@@ -14,8 +14,8 @@ let server = newServer(handler, workerThreads = 10)
 
 var serverThread: Thread[void]
 
-proc serverProc() =
-  {.gcsafe.}:
+proc serverProc() {.gcsafe.} =
+  {.cast(gcsafe).}:
     server.serve(Port(8080))
 
 createThread(serverThread, serverProc)

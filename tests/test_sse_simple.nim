@@ -74,8 +74,8 @@ block:
   
   # Start server in background
   var serverThread: Thread[void]
-  proc serverProc() =
-    {.gcsafe.}:
+  proc serverProc() {.gcsafe.} =
+    {.cast(gcsafe).}:
       try:
         server.serve(Port(8084))
       except:

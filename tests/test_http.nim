@@ -33,8 +33,9 @@ proc handler(request: Request) =
 let server = newServer(handler)
 
 var serverThread: Thread[void]
-proc serverProc() =
-  server.serve(Port(8081))
+proc serverProc() {.gcsafe.} =
+  {.cast(gcsafe).}:
+    server.serve(Port(8081))
 
 createThread(serverThread, serverProc)
 server.waitUntilReady()

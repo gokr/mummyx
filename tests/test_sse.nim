@@ -101,8 +101,8 @@ eventSource.onerror = function(event) {
   
   # Start server in background
   var serverThread: Thread[void]
-  proc serverProc() =
-    {.gcsafe.}:
+  proc serverProc() {.gcsafe.} =
+    {.cast(gcsafe).}:
       server.serve(Port(8081))
   
   createThread(serverThread, serverProc)
@@ -193,8 +193,8 @@ block:
 
   # Start server in background
   var serverThread2: Thread[void]
-  proc serverProc2() =
-    {.gcsafe.}:
+  proc serverProc2() {.gcsafe.} =
+    {.cast(gcsafe).}:
       server2.serve(Port(8082))
 
   createThread(serverThread2, serverProc2)
@@ -272,8 +272,8 @@ block:
 
   # Start server in background
   var serverThread3: Thread[void]
-  proc serverProc3() =
-    {.gcsafe.}:
+  proc serverProc3() {.gcsafe.} =
+    {.cast(gcsafe).}:
       server3.serve(Port(8083))
 
   createThread(serverThread3, serverProc3)

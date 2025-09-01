@@ -34,7 +34,7 @@ var
   requesterThreads = newSeq[Thread[void]](requesterThreadNum)
   waitingThread: Thread[void]
 
-proc requesterProc() =
+proc requesterProc() {.gcsafe.} =
   server.waitUntilReady()
 
   for i in 0 ..< 10:
@@ -47,15 +47,16 @@ proc requesterProc() =
 for requesterThread in requesterThreads.mitems:
   createThread(requesterThread, requesterProc)
 
-proc waitProc() =
-  {.gcsafe.}:
+proc waitProc() {.gcsafe.} =
+  {.cast(gcsafe).}:
     joinThreads(requesterThreads)
     echo "Done, shut down the server"
     # Note: Avoiding server.close() due to segfault in cleanup
 
 var serverThread: Thread[void]
-proc serverProc() =
-  server.serve(Port(8081))
+proc serverProc() {.gcsafe.} =
+  {.cast(gcsafe).}:
+    server.serve(Port(8081))
 
 createThread(serverThread, serverProc)
 createThread(waitingThread, waitProc)

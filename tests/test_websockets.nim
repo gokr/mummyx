@@ -53,7 +53,7 @@ let server = newServer(handler, websocketHandler)
 
 var requesterThread: Thread[void]
 
-proc requesterProc() =
+proc requesterProc() {.gcsafe.} =
   server.waitUntilReady()
 
   let ws = newWebSocket("ws://127.0.0.1:8081")
@@ -73,8 +73,9 @@ proc requesterProc() =
   # Note: Avoiding server.close() due to segfault in cleanup
 
 var serverThread: Thread[void]
-proc serverProc() =
-  server.serve(Port(8081))
+proc serverProc() {.gcsafe.} =
+  {.cast(gcsafe).}:
+    server.serve(Port(8081))
 
 createThread(serverThread, serverProc)
 createThread(requesterThread, requesterProc)

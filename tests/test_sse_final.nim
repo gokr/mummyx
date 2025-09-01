@@ -75,9 +75,10 @@ block:
   
   # Start server in background
   var serverThread: Thread[void]
-  proc serverProc() =
+  proc serverProc() {.gcsafe.} =
     try:
-      server.serve(Port(8085))
+      {.cast(gcsafe).}:
+        server.serve(Port(8085))
     except:
       echo "Server error: ", getCurrentExceptionMsg()
   
@@ -167,9 +168,10 @@ block:
   let server2 = newServer(router2)
 
   var serverThread2: Thread[void]
-  proc serverProc2() =
+  proc serverProc2() {.gcsafe.} =
     try:
-      server2.serve(Port(8086))
+      {.cast(gcsafe).}:
+        server2.serve(Port(8086))
     except:
       echo "Server error: ", getCurrentExceptionMsg()
 

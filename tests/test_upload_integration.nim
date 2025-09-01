@@ -16,7 +16,7 @@ const
   TEST_PORT = 8899
   TEST_BASE_URL = "http://localhost:" & $TEST_PORT
 
-proc serverProc() {.thread, gcsafe.} =
+proc serverProc() {.gcsafe.} =
   ## Run the test server in a background thread
   
   # TUS handler
@@ -161,7 +161,8 @@ proc serverProc() {.thread, gcsafe.} =
     serverRunning = true
   
   echo "Integration test server starting on port ", TEST_PORT
-  testServer.serve(Port(TEST_PORT))
+  {.cast(gcsafe).}:
+    testServer.serve(Port(TEST_PORT))
 
 proc startTestServer() =
   ## Start the test server in background
@@ -360,7 +361,7 @@ suite "Upload Integration Tests":
 
   test "Concurrent uploads":
     # Test multiple uploads happening simultaneously
-    proc uploadWorker(data: string): bool {.thread.} =
+    proc uploadWorker(data: string): bool {.gcsafe.} =
       try:
         let client = newHttpClient()
         defer: client.close()

@@ -14,7 +14,7 @@ let server = newServer(handler)
 
 var requesterThread: Thread[void]
 
-proc requesterProc() =
+proc requesterProc() {.gcsafe.} =
   server.waitUntilReady()
 
   proc openTcpSocket(): SocketHandle =
