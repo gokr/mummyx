@@ -1,6 +1,6 @@
-import std/[os, strutils, times, options, tables, streams, nativesockets]
-import std/[sequtils, hashes, random, strformat, sha1, base64]
-import common, ranges
+import std/[os, strutils, times, options, tables, nativesockets]
+import std/[sequtils, hashes, random, strformat, sha1]
+import common
 import webby/[queryparams, httpheaders]
 
 export os, times, options
@@ -406,7 +406,7 @@ proc getAvailableDiskSpace*(path: string): int64 =
   else:
     # Unix/Linux implementation using statvfs
     try:
-      let info = getFileInfo(path)
+      discard getFileInfo(path)
       # For now, return -1 to indicate unknown disk space
       # This could be enhanced with proper statvfs calls
       result = -1
