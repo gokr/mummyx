@@ -112,16 +112,6 @@ type
   WorkerTaskKind = enum
     ThreadPoolTask, TaskPoolsTask, WebSocketTask
 
-  Message* = object
-    kind*: MessageKind
-    data*: string
-
-  WebSocketEvent* = enum
-    OpenEvent, MessageEvent, ErrorEvent, CloseEvent
-
-  MessageKind* = enum
-    TextMessage, BinaryMessage, Ping, Pong
-
   SSEConnection* = object
     ## Represents an active Server-Sent Events connection
     server*: Server
@@ -136,39 +126,6 @@ type
     id*: Option[string]
     retry*: Option[int]
 
-  RequestHandler* = proc(request: Request) {.gcsafe.}
-
-  WebSocketHandler* = proc(
-    websocket: WebSocket,
-    event: WebSocketEvent,
-    message: Message
-  ) {.gcsafe.}
-
-  ServerObj = object
-    handler: RequestHandler
-    websocketHandler: WebSocketHandler
-    logHandler: LogHandler
-    maxHeadersLen, maxBodyLen, maxMessageLen: int
-    rand: Rand
-    workerThreads: seq[Thread[Server]]
-    serving: Atomic[bool]
-    destroyCalled: bool
-    socket: SocketHandle
-    selector: Selector[DataEntry]
-    responseQueued, sendQueued, shutdown: SelectEvent
-    clientSockets: HashSet[SocketHandle]
-    taskQueueLock: Lock
-    taskQueueCond: Cond
-    taskQueue: Deque[WorkerTask]
-    responseQueue: Deque[OutgoingBuffer]
-    responseQueueLock: Lock
-    sendQueue: Deque[OutgoingBuffer]
-    sendQueueLock: Lock
-    websocketClaimed: Table[WebSocket, bool]
-    websocketQueues: Table[WebSocket, Deque[WebSocketUpdate]]
-    websocketQueuesLock: Lock
-
-  Server* = ptr ServerObj
 
   WorkerTask = object
     case kind: WorkerTaskKind:
@@ -265,21 +222,6 @@ type
     enableUploads: bool
     tusConfig: TUSConfig
 
-  # Types moved above in main type section
-
-  SSEConnection* = object
-    ## Represents an active Server-Sent Events connection
-    server*: Server
-    clientSocket*: SocketHandle
-    clientId*: uint64
-    active*: bool
-
-  SSEEvent* = object
-    ## Represents a Server-Sent Events message
-    event*: Option[string]  ## Optional event type
-    data*: string          ## The data payload (required)
-    id*: Option[string]    ## Optional event ID for client-side event tracking
-    retry*: Option[int]    ## Optional retry timeout in milliseconds
 
 proc formatSSEEvent*(event: SSEEvent): string {.raises: [], gcsafe.} =
   ## Format an SSE event according to the Server-Sent Events specification
@@ -736,44 +678,6 @@ proc respondSSE*(
   
   # Mark request as responded to prevent double responses
   request.responded = true
-
-proc formatSSEEvent*(event: SSEEvent): string {.raises: [], gcsafe.} =
-  ## Format an SSE event according to the Server-Sent Events specification
-  ## https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-  
-  result = ""
-  
-  # Add event type if specified
-  if event.event.isSome:
-    result.add("event: " & event.event.get() & "\n")
-  
-  # Add event ID if specified
-  if event.id.isSome:
-    result.add("id: " & event.id.get() & "\n")
-  
-  # Add retry timeout if specified
-  if event.retry.isSome:
-    result.add("retry: " & $event.retry.get() & "\n")
-  
-  # Add data field(s) - handle multiline data properly
-  if event.data.len > 0:
-    # Split multiline data and prefix each line with "data: "
-    var pos = 0
-    while pos < event.data.len:
-      result.add("data: ")
-      let lineStart = pos
-      while pos < event.data.len and event.data[pos] != '\n':
-        inc pos
-      result.add(event.data[lineStart ..< pos])
-      result.add("\n")
-      if pos < event.data.len: # Skip the \n
-        inc pos
-  else:
-    # Empty data field
-    result.add("data: \n")
-  
-  # End event with empty line
-  result.add("\n")
 
 proc send*(
   connection: SSEConnection,
