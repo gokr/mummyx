@@ -107,7 +107,7 @@ type
   WebSocket* = object
     server: Server
     clientSocket: SocketHandle
-    clientId: uint64
+    clientId*: uint64
 
   WorkerTaskKind = enum
     ThreadPoolTask, TaskPoolsTask, WebSocketTask
